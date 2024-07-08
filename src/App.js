@@ -18,7 +18,7 @@ function App() {
   const handleChange = (level, value) => {
 
   let newSelectedValues = { ...selectedValues, [level]: value };
- // console.log(newSelectedValues);
+
   // Réinitialiser les valeurs sélectionnées pour les niveaux suivants
   Object.keys(newSelectedValues).forEach(key => {
     if (parseInt(key) > level) {
@@ -26,7 +26,6 @@ function App() {
     }
   });
   setSelectedValues(newSelectedValues);
-  //console.log(newSelectedValues);
 
   // Réinitialiser les options pour les niveaux suivants
   let newValues = { ...values };
@@ -49,9 +48,14 @@ console.log(apiUrl);
 
   axios.get(apiUrl)
     .then((response) => {
-      const nextLevelData = level % 2 === 0 ? response.data : response.data.enfants;
-      setValues({ ...newValues, [level + 1]: nextLevelData });
-    }).catch((error) => {
+      if (response.status === 200) {
+        const nextLevelData = level % 2 === 0 ? response.data : response.data.enfants;
+        if (!nextLevelData.length && level % 2 !== 0) return;
+        setValues({ ...newValues, [level + 1]: nextLevelData });
+      } else {
+        console.log(`Received non-200 status code: ${response.status}`);
+      }
+       }).catch((error) => {
       console.log(error);
     });
 };
@@ -81,7 +85,7 @@ function getDisplayValue(value) {
           </option>
       )) : []}
     </select>
-    <div className="form-text"> {/* Classe Bootstrap pour les textes descriptifs */}
+    <div className="form-text"> 
             {level % 2 === 0 ? 'Referentiel' : 'Valeur référentiel'}
           </div>
   </div>
