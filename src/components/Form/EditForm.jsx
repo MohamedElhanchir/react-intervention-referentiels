@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import {  useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
 
@@ -11,12 +11,14 @@ function EditForm() {
   const [selectedType, setSelectedType] = useState('');
   const [options, setOptions] = useState([{ label: "", value: "" }]);
   const [showModal, setShowModal] = useState(false);
-  const toggleModal = () => setShowModal(!showModal);
   const [fieldName, setFieldName] = useState('');
+
+  const [editingField, setEditingField] = useState(null); 
 
 const handleFieldNameChange = (event) => {
   setFieldName(event.target.value);
 };
+
 
   useEffect(() => {
     const fetchFieldTypes = async () => {
@@ -61,34 +63,65 @@ const handleFieldNameChange = (event) => {
     setOptions(newOptions);
   };
 
-  
-const handleSaveChanges = async () => {
-    const field_type = fieldTypes.find(type => type.name === selectedType);
-    if (!fieldName ||!selectedType || !field_type) {
-      alert('Veuillez remplir tous les champs');
-      return;
-    }
-    const dataToSend = {
-      name: fieldName,
-      field_type_id: field_type.id,
-      options: options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null,
-      form_id:id,
-        };
-  
-    //console.log(dataToSend);
+  const toggleModal = () => {
+    setShowModal(!showModal);
+    setFieldName('');
+    setSelectedType('');
+    setOptions([{ label: "", value: "" }])
+    setEditingField(null); 
+  };
+
+  const openEditModal = (field) => {
     
-   
-      await axios.post(`http://localhost:8000/api/fields`, dataToSend)
-      .then((response) => {
-        setShowModal(false);
-        response.data.data.field_type = field_type;
+    setEditingField(field);
+    setFieldName(field.name);
+    setSelectedType(field.field_type.name);
+    setOptions(Array.isArray(field.options) ? field.options : [{ label: "", value: "" }]);
+    setShowModal(true);
+  
+  };
+  
+
+
+const handleSaveChanges = async () => {
+  const field_type = fieldTypes.find(type => type.name === selectedType);
+
+  if (!fieldName || !selectedType || !field_type) {
+    alert('Veuillez remplir tous les champs');
+    return;
+  }
+
+  let ops=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
+  if(editingField){
+    if(selectedType !== 'Selected' && selectedType !== 'Radio' && selectedType !== 'Checkbox'){
+      ops=null;
+    }
+  }
+  
+  const dataToSend = {
+    name: fieldName,
+    field_type_id: field_type.id,
+    options: ops,
+    form_id: id,
+  };
+
+  const url = editingField ? `http://localhost:8000/api/fields/${editingField.id}` : `http://localhost:8000/api/fields`;
+  const method = editingField ? 'put' : 'post';
+
+  await axios({ method, url, data: dataToSend })
+    .then((response) => {
+      setShowModal(false);
+      response.data.data.field_type = field_type;
+      if (editingField) {
+        setFields(fields.map(f => f.id === editingField.id ? response.data.data : f));
+      } else {
+       
         setFields([...fields, response.data.data]);
-      console.log(response);
-        
+        }
       })
       .catch(error => {
-        console.error('Failed to add the field', error);
-        alert('Failed to add the field');
+        console.error('Failed to save the field', error);
+        alert('Failed to save the field');
       });
   };
 
@@ -119,7 +152,7 @@ const handleSaveChanges = async () => {
             {selectedType === 'Checkbox' || selectedType === 'Radio' || selectedType === 'Select' ? (
             <Form.Group>
               <Form.Label>Options</Form.Label>
-              {options.map((option, index) => (
+              {Array.isArray(options) ?  options.map((option, index) => (
                 <div key={index} className="d-flex align-items-center">
                   <Form.Control
                     type="text"
@@ -139,7 +172,7 @@ const handleSaveChanges = async () => {
                   />
         <Button variant="danger" onClick={() => removeOption(index)}>Supprimer</Button>
                 </div>
-              ))}
+              )): null}
               <Button onClick={addOption} className="mt-2">Ajouter une option</Button>
             </Form.Group>
   ) : null}
@@ -169,7 +202,7 @@ const handleSaveChanges = async () => {
               <td>{field.name}</td>
               <td>{field.field_type.name}</td>
               <td>
-                <button className="btn btn-primary mr-2"  onClick={handleSaveChanges}>Modifier</button>
+                <button className="btn btn-primary mr-2"  onClick={() => openEditModal(field)}>Modifier</button>
                 <button className="btn btn-danger m-1" onClick={() => handleDelete(field)}>Supprimer</button>
               </td>
             </tr>
