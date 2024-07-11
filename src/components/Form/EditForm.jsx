@@ -28,6 +28,7 @@ const handleFieldNameChange = (event) => {
     fetchFieldTypes();
   }, []);
 
+
   useEffect(() => {
     const fetchFields = async () => {
       const response = await axios.get(`http://localhost:8000/api/forms/${id}/fields`);
@@ -35,6 +36,7 @@ const handleFieldNameChange = (event) => {
     };
     fetchFields();
   }, [id]);
+
 
   const handleDelete = async (field) => {
     await axios.delete(`http://localhost:8000/api/fields/${field.id}`)
@@ -47,21 +49,25 @@ const handleFieldNameChange = (event) => {
       });
   };
 
+
   const handleOptionChange = (index, event) => {
     const newOptions = [...options];
     newOptions[index][event.target.name] = event.target.value;
     setOptions(newOptions);
   };
 
+
   const addOption = () => {
     setOptions([...options, { label: "", value: "" }]);
   };
+
 
   const removeOption = (index) => {
     const newOptions = [...options];
     newOptions.splice(index, 1);
     setOptions(newOptions);
   };
+
 
   const toggleModal = () => {
     setShowModal(!showModal);
@@ -72,13 +78,11 @@ const handleFieldNameChange = (event) => {
   };
 
   const openEditModal = (field) => {
-    
     setEditingField(field);
     setFieldName(field.name);
     setSelectedType(field.field_type.name);
     setOptions(Array.isArray(field.options) ? field.options : [{ label: "", value: "" }]);
     setShowModal(true);
-  
   };
   
 
@@ -91,17 +95,17 @@ const handleSaveChanges = async () => {
     return;
   }
 
-  let ops=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
+  let opts=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
   if(editingField){
     if(selectedType !== 'Selected' && selectedType !== 'Radio' && selectedType !== 'Checkbox'){
-      ops=null;
+      opts=null;
     }
   }
   
   const dataToSend = {
     name: fieldName,
     field_type_id: field_type.id,
-    options: ops,
+    options: opts,
     form_id: id,
   };
 
@@ -151,7 +155,7 @@ const handleSaveChanges = async () => {
             
             {selectedType === 'Checkbox' || selectedType === 'Radio' || selectedType === 'Select' ? (
             <Form.Group>
-              <Form.Label>Options</Form.Label>
+              <Form.Label className="m-2">Options</Form.Label>
               {Array.isArray(options) ?  options.map((option, index) => (
                 <div key={index} className="d-flex align-items-center">
                   <Form.Control
