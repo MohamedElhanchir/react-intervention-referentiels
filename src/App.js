@@ -1,98 +1,57 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useEffect, useState } from 'react';
+import Home from './components/Home/Home';
+import Intervention from './components/Intervention/Intervention';
+import FormList from './components/Form/FormList';
+import EditForm from './components/Form/EditForm';
 
 function App() {
-  const [values, setValues] = useState({}); 
-  const [selectedValues, setSelectedValues] = useState({}); 
+  const [currentRoute, setCurrentRoute] = useState()
 
-  useEffect(() => {
-    axios.get('http://localhost:8000/api/referentiels-intervention')
-      .then((response) => {
-        setValues({ 0: response.data.referentiel_parent });
-      }).catch((error) => {
-        console.log(error);
-      });
-  }, []);
-
-  const handleChange = (level, value) => {
-
-  let newSelectedValues = { ...selectedValues, [level]: value };
-
-  // Réinitialiser les valeurs sélectionnées pour les niveaux suivants
-  Object.keys(newSelectedValues).forEach(key => {
-    if (parseInt(key) > level) {
-      delete newSelectedValues[key];
-    }
-  });
-  setSelectedValues(newSelectedValues);
-
-  // Réinitialiser les options pour les niveaux suivants
-  let newValues = { ...values };
-  Object.keys(newValues).forEach(key => {
-    if (parseInt(key) > level) {
-      delete newValues[key];
-    }
-  });
-  setValues(newValues);
-
-  // Construire l'URL en fonction des sélections précédentes
-  let apiUrl = 'http://localhost:8000/api/referentiels-intervention';
-  for (let i = 0; i <= level; i++) {
-    if (newSelectedValues[i]) {
-      apiUrl += `/${newSelectedValues[i]}`;
-    }
-  }
-
-console.log(apiUrl);
-
-  axios.get(apiUrl)
-    .then((response) => {
-      if (response.status === 200) {
-        const nextLevelData = level % 2 === 0 ? response.data : response.data.enfants;
-        if (!nextLevelData.length && level % 2 !== 0) return;
-        setValues({ ...newValues, [level + 1]: nextLevelData });
-      } else {
-        console.log(`Received non-200 status code: ${response.status}`);
-      }
-       }).catch((error) => {
-      console.log(error);
-    });
-};
-
-function getDisplayValue(value) {
-  return value.valeur || value.nom;
-}
-
-
+  useEffect(() =>{
+    setCurrentRoute(window.location.pathname.split('/')[1].toLocaleLowerCase())
+  },[]) 
   return (
-    <div className="App container mt-5 col-md-6">
-      <h1 className='mb-3'>Referentiels Intervention</h1>
-
-
-      {Object.keys(values).map((level) => (
-  <div key={level} className='mb-3'>
-    <select className='form-select'
-      value={selectedValues[level] || ''}
-      onChange={(e) => handleChange(parseInt(level), e.target.value)}
-      required
-    > 
-      {Array.isArray(values[level]) && <option value="">Sélectionnez une option</option>}      
-      
-      {Array.isArray(values[level]) ? values[level].map((value, index) => (
-        <option key={index} value={value.id}>
-        {getDisplayValue(value)}
-          </option>
-      )) : []}
-    </select>
-    <div className="form-text"> 
-            {level % 2 === 0 ? 'Referentiel' : 'Valeur référentiel'}
+  
+    <BrowserRouter>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/home">Vehicle</Link>
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav">
+              <li className="nav-item">
+                <Link 
+                onClick={() => setCurrentRoute('home')}
+                className={`nav-link ${currentRoute === 'home' ? 'active' : ''}`} 
+                to="/home">Home</Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                onClick={() => setCurrentRoute('intervention')}
+                className={`nav-link ${currentRoute === 'intervention' ? 'active' : ''}`} 
+                to="/intervention">Intervention</Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                onClick={() => setCurrentRoute('form')}
+                className={`nav-link ${currentRoute === 'form' ? 'active' : ''}`} 
+                to="/form">Form</Link>
+              </li>
+            </ul>
           </div>
-  </div>
-))}
-
-
-    </div>
+        </div>
+      </nav>
+      <Routes>
+        <Route path="/home" element={<Home />} /> 
+        <Route path="/intervention" element={<Intervention />} />
+        <Route path="/form" element={<FormList />} />
+        <Route path="/edit-form/:id" element={<EditForm />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
