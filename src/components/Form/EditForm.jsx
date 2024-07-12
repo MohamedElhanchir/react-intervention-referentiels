@@ -97,7 +97,7 @@ const handleSaveChanges = async () => {
 
   let opts=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
   if(editingField){
-    if(selectedType !== 'Selected' && selectedType !== 'Radio' && selectedType !== 'Checkbox'){
+    if(selectedType !== 'Select' && selectedType !== 'Radio' && selectedType !== 'Checkbox'){
       opts=null;
     }
   }
