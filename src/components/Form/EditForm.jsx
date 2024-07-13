@@ -31,22 +31,20 @@ function EditForm() {
 
   const handleKeyPress = (e, sectionId) => {
     if (e.key === 'Enter') {
-      console.log(editSectionName);
-      console.log(sectionId);
-    }
-      // Envoyer la requête pour mettre à jour le nom de la section
-    /*  axios.put(`http://localhost:8000/api/forms/${id}/sections/${sectionId}`, {
+     axios.put(`http://localhost:8000/api/form_sections/${sectionId}`, {
+        id: sectionId,
+        form_id: id,
         name: editSectionName,
+
       })
       .then(() => {
-        // Mettre à jour l'état local après la mise à jour réussie
         const updatedSections = { ...formSection };
         updatedSections[sectionId].formSection.name = editSectionName;
         setFormSection(updatedSections);
-        setEditSectionId(null); // Quitter le mode d'édition
+        setEditSectionId(null); 
       })
       .catch(error => console.error('There was an error updating the section name:', error));
-    }*/
+    }
   };
 
   const renderField = (field) => {
