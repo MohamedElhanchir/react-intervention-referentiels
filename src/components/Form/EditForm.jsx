@@ -1,13 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Container, Form, Col, Row, FormControl, Accordion, InputGroup } from 'react-bootstrap';
+import { Container, Form, Col, Row, FormControl, Accordion, InputGroup, Button, Modal } from 'react-bootstrap';
 
 function EditForm() {
   const { id } = useParams();
   const [formSection, setFormSection] = useState({});
   const [editSectionId, setEditSectionId] = useState(null);
   const [editSectionName, setEditSectionName] = useState('');
+
+
+
+  const [fieldTypes, setFieldTypes] = useState([]);
+  const [selectedType, setSelectedType] = useState('');
+  const [fieldSectionId, setFieldSectionId] = useState(null); 
+  const [fieldName, setFieldName] = useState('');
+  const [options, setOptions] = useState([{ label: "", value: "" }]);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const fetchFieldTypes = async () => {
+      const response = await axios.get('http://localhost:8000/api/field_types');
+      setFieldTypes(response.data.data);
+    };
+    fetchFieldTypes();
+  }, []);
+
+
+
+  const handleFieldNameChange = (event) => {
+    setFieldName(event.target.value);
+  };
+
+  const handleOptionChange = (index, event) => {
+    const newOptions = [...options];
+    newOptions[index][event.target.name] = event.target.value;
+    setOptions(newOptions);
+  };
+
+
+  const addOption = () => {
+    setOptions([...options, { label: "", value: "" }]);
+  };
+
+
+  const removeOption = (index) => {
+    const newOptions = [...options];
+    newOptions.splice(index, 1);
+    setOptions(newOptions);
+  };
+
+
+  const toggleModal = () => {
+    setShowModal(!showModal);
+    setFieldName('');
+    setSelectedType('');
+    setFieldSectionId(null);
+    setOptions([{ label: "", value: "" }])
+  };
+
+
 
 
   useEffect(() => {
@@ -78,7 +130,7 @@ function EditForm() {
       case 'email':
         return <FormControl type="email" value={field.value} disabled />;
       case 'password':
-        return <FormControl type="password" value={field.value} disabled />;
+        return <FormControl type="password" value={field.field_type.name} disabled />;
       case 'file':
         return <FormControl type="file" disabled />;
       case 'textarea':
@@ -87,6 +139,63 @@ function EditForm() {
         return <FormControl type="text" value={field.value} disabled />;
     }
   };
+
+  const handleAddField = async (sectionId) => {
+    toggleModal(); 
+    setFieldSectionId(sectionId);
+    console.log(sectionId);
+  };
+
+  const handleSaveChanges = async () => {
+    
+    const field_type = fieldTypes.find(type => type.name === selectedType);
+
+    if (!fieldName || !selectedType || !field_type) {
+      alert('Veuillez remplir tous les champs');
+      return;
+    }
+  
+    let opts=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
+   /* if(editingField){
+      if(selectedType !== 'select' && selectedType !== 'radio' && selectedType !== 'checkbox'){
+        opts=null;
+      }
+  }
+        */
+    
+
+    const dataToSend = {
+      name: fieldName,
+      field_type_id: field_type.id,
+      form_section_id: fieldSectionId,
+      options: opts,
+      form_id: parseInt(id),
+    };
+
+    console.log(dataToSend);
+  
+   
+
+    const url = `http://localhost:8000/api/fields`;
+    const method =  'post';
+    await axios({ method, url, data: dataToSend })
+    .then((response) => {
+      setShowModal(false);
+      response.data.data.field_type = field_type;
+      const updatedSections = { ...formSection };
+      const targetIndex = fieldSectionId !== null ? fieldSectionId : "Non classé";
+      updatedSections[targetIndex].formSection.fields.push(response.data.data);
+      
+      //setFormSection(updatedSections);
+      })
+      .catch(error => {
+        console.error('Failed to save the field', error);
+        alert('Failed to save the field');
+      });
+    
+      
+      
+  }
 
   return (
     <Container className="mt-5">
@@ -111,6 +220,15 @@ function EditForm() {
               )}
             </Accordion.Header>
             <Accordion.Body>
+            <Button
+  variant="success"
+  size="sm"
+  onClick={() => handleAddField(sectionValue.formSection.id)}
+  style={{ marginLeft: '10px' }}
+>
+  Ajouter un nouveau champ
+</Button>
+              
               {sectionValue.fields.map((field) => (
                 <Form.Group as={Row} key={field.id} className="mb-3">
                   <Form.Label column sm="2">
@@ -125,6 +243,65 @@ function EditForm() {
           </Accordion.Item>
         ))}
       </Accordion>
+      <div>
+      
+      <Modal show={showModal} onHide={toggleModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Ajouter un nouveau field</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        <Form.Group>
+        <Form.Label>Nom</Form.Label>
+              <Form.Control type="text" required placeholder="Entrez le nom du champ" value={fieldName} onChange={handleFieldNameChange} />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Type</Form.Label>
+              <Form.Control as="select" value={selectedType} onChange={e => setSelectedType(e.target.value)}>
+                <option value="">Sélectionnez un type</option>
+                {fieldTypes.map((type) => (
+                  <option key={type.id} value={type.name}>{type.name}</option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+            
+            {selectedType === 'checkbox' || selectedType === 'radio' || selectedType === 'select' ? (
+            <Form.Group>
+              <Form.Label className="m-2">Options</Form.Label>
+              {Array.isArray(options) ?  options.map((option, index) => (
+                <div key={index} className="d-flex align-items-center">
+                  <Form.Control
+                    type="text"
+                    placeholder="Label"
+                    name="label"
+                    value={option.label}
+                    onChange={(e) => handleOptionChange(index, e)}
+                    className="m-2"
+                  />
+                  <Form.Control
+                    type="text"
+                    placeholder="Valeur"
+                    name="value"
+                    value={option.value}
+                    onChange={(e) => handleOptionChange(index, e)}
+                    className="m-2"
+                  />
+        <Button variant="danger" onClick={() => removeOption(index)}>Supprimer</Button>
+                </div>
+              )): null}
+              <Button onClick={addOption} className="mt-2">Ajouter une option</Button>
+            </Form.Group>
+  ) : null}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={toggleModal}>
+            Fermer
+          </Button>
+          <Button variant="primary" onClick={handleSaveChanges} >
+            Sauvegarder les changements
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
     </Container>
   );
 }
