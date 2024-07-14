@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Container, Form, Col, Row, FormControl, Accordion, InputGroup, Button, Modal } from 'react-bootstrap';
+import { Container, Form, Col, Row, FormControl, Accordion, InputGroup, Button, Modal, Spinner } from 'react-bootstrap';
 
 function EditForm() {
   const { id } = useParams();
   const [formSection, setFormSection] = useState({});
   const [editSectionId, setEditSectionId] = useState(null);
   const [editSectionName, setEditSectionName] = useState('');
+  const [errors, setErrors] = useState({}); 
+
 
 
 
@@ -17,6 +19,7 @@ function EditForm() {
   const [fieldName, setFieldName] = useState('');
   const [options, setOptions] = useState([{ label: "", value: "" }]);
   const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchFieldTypes = async () => {
@@ -146,14 +149,33 @@ function EditForm() {
     console.log(sectionId);
   };
 
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!fieldName.trim()) {
+      newErrors.fieldName = 'Le nom du champ est requis.';
+    }
+    if (!selectedType) {
+      newErrors.selectedType = 'Le type de champ est requis.';
+    }
+    // Ajoutez d'autres validations selon vos besoins
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+
   const handleSaveChanges = async () => {
+    setIsLoading(true);
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
+
     
     const field_type = fieldTypes.find(type => type.name === selectedType);
 
-    if (!fieldName || !selectedType || !field_type) {
-      alert('Veuillez remplir tous les champs');
-      return;
-    }
+
   
     let opts=options.filter(option => option.label && option.value).length > 0 ? options.filter(option => option.label && option.value) : null
    /* if(editingField){
@@ -183,14 +205,21 @@ function EditForm() {
       setShowModal(false);
       response.data.data.field_type = field_type;
       const updatedSections = { ...formSection };
-      const targetIndex = fieldSectionId !== null ? fieldSectionId : "Non classé";
-      updatedSections[targetIndex].formSection.fields.push(response.data.data);
+      const targetIndex=fieldSectionId?fieldSectionId:'Non classé'
+      if (updatedSections[targetIndex] && updatedSections[targetIndex].fields) {
+        updatedSections[targetIndex].fields.push(response.data.data);
+      } else {
+        console.error('Section not found or does not have a fields array');
+      }
       
-      //setFormSection(updatedSections);
+      setFormSection(updatedSections); 
       })
       .catch(error => {
         console.error('Failed to save the field', error);
         alert('Failed to save the field');
+      })
+      .finally(() => {
+        setIsLoading(false); 
       });
     
       
@@ -253,6 +282,7 @@ function EditForm() {
         <Form.Group>
         <Form.Label>Nom</Form.Label>
               <Form.Control type="text" required placeholder="Entrez le nom du champ" value={fieldName} onChange={handleFieldNameChange} />
+              {errors.fieldName && <span style={{ color: 'red' }}>{errors.fieldName}</span>}
             </Form.Group>
             <Form.Group>
               <Form.Label>Type</Form.Label>
@@ -262,6 +292,7 @@ function EditForm() {
                   <option key={type.id} value={type.name}>{type.name}</option>
                 ))}
               </Form.Control>
+              {errors.selectedType && <span style={{ color: 'red' }}>{errors.selectedType}</span>}
             </Form.Group>
             
             {selectedType === 'checkbox' || selectedType === 'radio' || selectedType === 'select' ? (
@@ -296,8 +327,8 @@ function EditForm() {
           <Button variant="secondary" onClick={toggleModal}>
             Fermer
           </Button>
-          <Button variant="primary" onClick={handleSaveChanges} >
-            Sauvegarder les changements
+          <Button variant="primary" onClick={handleSaveChanges}  disabled={isLoading}>
+          {isLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : "Sauvegarder les changements"}
           </Button>
         </Modal.Footer>
       </Modal>
