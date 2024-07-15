@@ -41,42 +41,48 @@ const Section = ({ sectionKey, sectionValue, formSection,setFormSection,id,setFi
   };
 
   return (
-    <Accordion.Item eventKey={sectionKey}>
-      <Accordion.Header onDoubleClick={() => handleDoubleClick(sectionKey, sectionValue.formSection.name)}>
-        {editSectionId === sectionKey && sectionValue.formSection.id ? (
-          <InputGroup>
-            <FormControl
-              autoFocus
-              value={editSectionName}
-              onChange={handleNameChange}
-              onKeyPress={(e) => handleKeyPress(e, sectionKey)}
-            />
-          </InputGroup>
-        ) : (
-          sectionValue.formSection.name
-        )}
-      </Accordion.Header>
-      <Accordion.Body>
-        <Button
-          variant="success"
-          size="sm"
-          onClick={() => handleAddField(sectionValue.formSection.id)}
-          style={{ marginLeft: '10px' }}
-        >
-          Ajouter un nouveau champ
-        </Button>
-        {sectionValue.fields.map((field) => (
-          <Form.Group as={Row} key={field.id} className="mb-3">
-            <Form.Label column sm="2">
-              {field.name}
-            </Form.Label>
-            <Col sm="10">
-              <FieldRenderer field={field} />
-            </Col>
-          </Form.Group>
-        ))}
-      </Accordion.Body>
-    </Accordion.Item>
+    <Accordion.Item eventKey={sectionKey} style={{ backgroundColor: "#f8f9fa" }}>
+    <Accordion.Header 
+      onDoubleClick={() => handleDoubleClick(sectionKey, sectionValue.formSection.name)}
+      style={{ backgroundColor: "#e9ecef", color: "#495057" }}
+    >
+      {editSectionId === sectionKey && sectionValue.formSection.id ? (
+        <InputGroup size="sm">
+          <FormControl
+            autoFocus
+            value={editSectionName}
+            onChange={handleNameChange}
+            onKeyPress={(e) => handleKeyPress(e, sectionValue.formSection.id)}
+            style={{ fontSize: "0.875rem" }}
+          />
+        </InputGroup>
+      ) : (
+        <span style={{ fontSize: "1rem", fontWeight: "bold", color: "#495057" }}>
+          {sectionValue.formSection.name}
+        </span>
+      )}
+    </Accordion.Header>
+    <Accordion.Body style={{ backgroundColor: "#fff", padding: "10px" }}>
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={() => handleAddField(sectionValue.formSection.id)}
+        style={{ margin: "0 0 10px 10px", fontSize: "0.875rem" }}
+      >
+        Ajouter un nouveau champ
+      </Button>
+      {sectionValue.fields.map((field) => (
+        <Form.Group as={Row} key={field.id} className="mb-2" style={{ margin: "0 -15px" }}>
+          <Form.Label column sm="2" style={{ fontSize: "0.875rem", color: "#6c757d", padding: "0 15px" }}>
+            {field.name}
+          </Form.Label>
+          <Col sm="10" style={{ padding: "0 15px" }}>
+            <FieldRenderer field={field} />
+          </Col>
+        </Form.Group>
+      ))}
+    </Accordion.Body>
+  </Accordion.Item>
   );
 };
 

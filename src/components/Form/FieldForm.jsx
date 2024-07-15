@@ -73,13 +73,17 @@ const FieldForm = ({
       .then((response) => {
         setShowModal(false);
         response.data.data.field_type = field_type;
+        if (response.data.data.options && typeof response.data.data.options === 'string') {
+          response.data.data.options = JSON.parse(response.data.data.options);
+        }
         const updatedSections = { ...formSection };
         const targetIndex = fieldSectionId ? fieldSectionId : 'Non classé';
-        if (updatedSections[targetIndex] && updatedSections[targetIndex].fields) {
-          updatedSections[targetIndex].fields.push(response.data.data);
-        } else {
-          console.error('Section not found or does not have a fields array');
-        }
+    if (!updatedSections[targetIndex]) {
+      updatedSections[targetIndex] = {
+        formSection: { id: null, name: 'Non classé' }, 
+        fields: []
+      };}
+        updatedSections[targetIndex].fields.push(response.data.data);
         setFormSection(updatedSections);
       })
       .catch(error => {

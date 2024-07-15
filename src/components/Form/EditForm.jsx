@@ -51,7 +51,14 @@ function EditForm() {
 
   return (
     <Container className="mt-5">
+
       <SectionFormAdd   id={id} formSection={formSection} setFormSection={setFormSection}/>
+
+{!Object.keys(formSection).includes("Non classé")?
+  <button onClick={() => {toggleModal()}} className="btn btn-primary mb-3">
+        Ajouter un champ
+        </button>:null}
+      
 
       <Accordion defaultActiveKey="0">
         {Object.entries(formSection).map(([sectionKey, sectionValue], index) => (
