@@ -6,6 +6,7 @@ import FieldForm from './FieldForm';
 import Section from './SectionForm';
 import SectionFormAdd from './SectionFormAdd ';
 
+
 function EditForm() {
   const { id } = useParams();
   const [formSection, setFormSection] = useState({});
@@ -53,7 +54,7 @@ function EditForm() {
     <Container className="mt-5">
 
       <SectionFormAdd   id={id} formSection={formSection} setFormSection={setFormSection}/>
-
+      
 {!Object.keys(formSection).includes("Non classé")?
   <button onClick={() => {toggleModal()}} className="btn btn-primary mb-3">
         Ajouter un champ

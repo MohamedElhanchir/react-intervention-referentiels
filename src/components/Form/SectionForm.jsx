@@ -47,15 +47,21 @@ const Section = ({ sectionKey, sectionValue, formSection,setFormSection,id,setFi
       style={{ backgroundColor: "#e9ecef", color: "#495057" }}
     >
       {editSectionId === sectionKey && sectionValue.formSection.id ? (
-        <InputGroup size="sm">
-          <FormControl
-            autoFocus
-            value={editSectionName}
-            onChange={handleNameChange}
-            onKeyPress={(e) => handleKeyPress(e, sectionValue.formSection.id)}
-            style={{ fontSize: "0.875rem" }}
-          />
-        </InputGroup>
+       <InputGroup size="sm" style={{ maxWidth: "250px" }}>
+       <FormControl
+         autoFocus
+         value={editSectionName}
+         onChange={handleNameChange}
+         onKeyPress={(e) => handleKeyPress(e, sectionValue.formSection.id)}
+         onBlur={() => setEditSectionId(null)}
+         onKeyDown={(e) => {
+           if (e.key === 'Escape') {
+             setEditSectionId(null); 
+           }
+         }}
+         style={{ fontSize: "0.875rem" }}
+       />
+     </InputGroup>
       ) : (
         <span style={{ fontSize: "1rem", fontWeight: "bold", color: "#495057" }}>
           {sectionValue.formSection.name}
