@@ -5,6 +5,7 @@ import Home from './components/Home/Home';
 import Intervention from './components/Intervention/Intervention';
 import FormList from './components/Form/FormList';
 import EditForm from './components/Form/EditForm';
+import SearchIntervention from './components/SearchIntervention/SearchIntervention';
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState()
@@ -35,12 +36,21 @@ function App() {
                 className={`nav-link ${currentRoute === 'intervention' ? 'active' : ''}`} 
                 to="/intervention">Intervention</Link>
               </li>
+
               <li className="nav-item">
                 <Link
                 onClick={() => setCurrentRoute('form')}
                 className={`nav-link ${currentRoute === 'form' ? 'active' : ''}`} 
                 to="/form">Form</Link>
               </li>
+
+              <li className="nav-item">
+                <Link
+                onClick={() => setCurrentRoute('search-intervention')}
+                className={`nav-link ${currentRoute === 'search-intervention' ? 'active' : ''}`} 
+                to="/search-intervention">Search Intervention</Link>
+              </li>
+
             </ul>
           </div>
         </div>
@@ -50,6 +60,7 @@ function App() {
         <Route path="/intervention" element={<Intervention />} />
         <Route path="/form" element={<FormList />} />
         <Route path="/edit-form/:id" element={<EditForm />} />
+        <Route path="/search-intervention" element={<SearchIntervention />} />
       </Routes>
     </BrowserRouter>
   );
